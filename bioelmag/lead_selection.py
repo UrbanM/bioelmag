@@ -56,6 +56,18 @@ class EvokedMaps:
 		copied_evoked = copy.deepcopy(self)
 		return copied_evoked
 
+	def save(self, filepath):
+		#filepath should have extension -evomap.obj
+		import pickle
+		filehandler = open(filepath, 'wb')
+		pickle.dump(self, filehandler)
+
+	def open(self, filepath):
+		#filepath should have extension -evomap.obj
+		import pickle
+		filehandler = open(filepath, 'rb')
+		self = pickle.load(filehandler)
+
 
 class covariance_matrix:
 	def __init__(self):
@@ -152,6 +164,19 @@ class leadsel_matrix:
 		self.data = np.dot(KUM, KMM_inv)
 		self.chosen = cov_mat.names[:no_chosen_ch]
 		self.unchosen = cov_mat.names[no_chosen_ch:]
+
+	def save(self, filepath):
+		#filepath should have extension -lsm.obj
+		import pickle
+		filehandler = open(filepath, 'wb')
+		pickle.dump(self, filehandler)
+
+	def open(self, filepath):
+		#filepath should have extension -lsm.obj
+		import pickle
+		filehandler = open(filepath, 'rb')
+		self = pickle.load(filehandler)
+
 
 
 def get_leadsel_matrix(cov_matrix, no_best_ch, opm_sensors=False):
