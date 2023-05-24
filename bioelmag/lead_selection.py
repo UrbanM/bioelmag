@@ -329,11 +329,11 @@ def create_evokedmaps_lsm(evokedmaps, LSM, time_inter=None):
     import numpy as np
     lsm_evoked = evokedmaps.copy()
 
-    chosen_indx = np.zeros(len(LSM.chosen), dtype=np.int)
+    chosen_indx = np.zeros(len(LSM.chosen), dtype=int)
     for i in range(len(LSM.chosen)):
         chosen_indx[i] = np.where(np.array(evokedmaps.names) == LSM.chosen[i])[0]
 
-    unchosen_indx = np.zeros(len(LSM.unchosen), dtype=np.int)
+    unchosen_indx = np.zeros(len(LSM.unchosen), dtype=int)
     for i in range(len(LSM.unchosen)):
         unchosen_indx[i] = np.where(np.array(evokedmaps.names) == LSM.unchosen[i])[0]
 
