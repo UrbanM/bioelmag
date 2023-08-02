@@ -32,7 +32,7 @@ def imp_sensor_occupied(fn):
 
     holders = [a + b for a, b in zip(sensors, orientations)]
 
-    return np.array(holders).astype(np.float)
+    return np.array(holders).astype(float)
 
 
 def create_sens_pos_occupied(fn, sel_list):
