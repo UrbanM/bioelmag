@@ -172,7 +172,9 @@ def read_meas_info(meas_info_fn, block_name):
         for i in bads_idx_string:
             bads_idx.append(i)
 
-    meas_info = {"gain": float(measurements[meas_idx, 4]),
+    meas_info = {
+                 "meas_state": int(measurements[meas_idx, 0]),
+                 "gain": float(measurements[meas_idx, 4]),
                  # 'sens_num': int(measurements[meas_idx, 7]),
                  "geom_name": measurements[meas_idx, 12],
                  "protocol": measurements[meas_idx, 13],
@@ -185,7 +187,8 @@ def read_meas_info(meas_info_fn, block_name):
                  "block_name": measurements[meas_idx, 1],
                  # "meas_dir": meas_dir,
                  "reorient_idx": reorient_idx,
-                 "additional_block_name": measurements[meas_idx, 14]
+                 "additional_block_name": measurements[meas_idx, 14],
+                 "bad_epochs":measurements[meas_idx, 15]
                  }
 
     # sens_hold, con_pos = read_sensor_positions(meas_dir, block_name,
@@ -271,13 +274,18 @@ def move_pos_dict(pos_dict, move_fn):
 
                 # affect_list is the all channels that have to be
                 # manipulated
-                idx = np.flatnonzero(np.core.defchararray.find(
-                    list(pos_dict.keys()), line_list[1]) != -1)
+                idx = np.array([s.find(line_list[1]) for s in list(pos_dict.keys())])
+                idx = np.where(idx >= 0)[0].tolist()
+                # idx = np.flatnonzero(np.core.defchararray.find(
+                #     list(pos_dict.keys()), line_list[1]) != -1)
                 affect_list = np.array(list(pos_dict.keys()))[idx].tolist()
 
                 if line_list[0] == "mv":
-                    mv_vec_idx = np.flatnonzero(np.core.defchararray.find(
-                        affect_list, line_list[2]) != -1)
+                    # mv_vec_idx = np.flatnonzero(np.core.defchararray.find(
+                    #     affect_list, line_list[2]) != -1)
+                    mv_vec_idx = np.array([s.find(line_list[2]) for s in affect_list])
+                    mv_vec_idx = np.where(mv_vec_idx > 0)[0].tolist()
+
                     mv_vec_name = affect_list[mv_vec_idx[0]]
                     mv_vector = pos_dict[mv_vec_name][3:6]
                     mv_vector = (mv_vector/np.linalg.norm(mv_vector)) * \
@@ -286,8 +294,11 @@ def move_pos_dict(pos_dict, move_fn):
                         pos_dict[i][0:3] = pos_dict[i][0:3] + mv_vector
 
                 if line_list[0] == "rt":
-                    rt_vec_idx = np.flatnonzero(np.core.defchararray.find(
-                        affect_list, line_list[2]) != -1)
+                    # rt_vec_idx = np.flatnonzero(np.core.defchararray.find(
+                    #     affect_list, line_list[2]) != -1)
+                    rt_vec_idx = np.array([s.find(line_list[2]) for s in affect_list])
+                    rt_vec_idx = np.where(rt_vec_idx > 0)[0].tolist()
+
                     rt_vec_name = affect_list[rt_vec_idx[0]]
                     for i in affect_list:
                         # pos_dict[i][3:6] = rove.rotateAbout(
