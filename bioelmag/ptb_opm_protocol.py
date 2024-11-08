@@ -50,6 +50,52 @@ def read_sens_info(sens_pos_fn, num_sens=None):
     return sens_info
 
 
+def read_sens_info_v2(sens_pos_fn, num_sens=None):
+    # full path to the measurement directory
+    # the files have to be exported to .csv
+    # number of sensors you want to import
+    # returns "sens_hold_idx" which corresponds to the
+    # holes on OPM sensor holders built at PTB and
+    # "con_position" which corresponds to # of channel
+    # in con file
+
+    import numpy as np
+    sens_info = {}
+
+    # filename = f"{meas_dir}Positions/SensorPositions_{block_name}.csv"
+    with open(sens_pos_fn) as f:
+        # sens_pos = np.loadtxt((x.replace(',', "\t") for x in f),
+        sens_pos = np.loadtxt((x for x in f), skiprows=1,
+                              delimiter="\t", max_rows=num_sens,
+                              dtype=str)
+
+    file_sens_idx = sens_pos[:, 0]
+    file_sens_hold_idx = sens_pos[:, 1]
+    file_sens_name = sens_pos[:, 3]
+    file_sens_type = sens_pos[:, 4]
+
+    directions = ["x", "y", "z"]
+    sens_holdpos = []
+    sens_type = []
+    sens_names = []
+    for i, j in enumerate(file_sens_idx):
+        if file_sens_type[i] == "oMEG":
+            for k, l in enumerate(file_sens_name[i].split(", ")):
+                sens_names.append(l)
+                sens_type.append("mag")
+                sens_holdpos.append(file_sens_hold_idx[i] + directions[k])
+        else:
+            sens_type.append(file_sens_type[i])
+            sens_names.append(file_sens_name[i])
+            sens_holdpos.append("")
+
+    sens_info["sens_names"] = sens_names
+    sens_info["sens_type"] = sens_type
+    sens_info["sens_holdpos"] = sens_holdpos
+    #
+    return sens_info
+
+
 def read_fnirs_chan_info(sens_pos_fn, num_sens=None):
     # I have to include this in bioelmag.ptb_opm_protocol
     # full path to the measurement directory
@@ -384,13 +430,13 @@ def create_sens_pos_dict(fn, fileformat):
     return pos_dict
 
 
-def rotate_translate_pos_dict(pos_dict, opm_trans_path, name, subject_dir="",
+def rotate_translate_pos_dict(pos_dict, opm_trans_path, geom_name, subject_dir="",
                               gen12=2):
     import bioelmag.vector_functions as vfun
     import numpy as np
     import mne
 
-    rotation, translation = import_opm_trans(opm_trans_path, name[0:4])
+    rotation, translation = import_opm_trans(opm_trans_path, geom_name)
     translation = translation / 1000.0
 
     for key in pos_dict:
@@ -421,7 +467,7 @@ def rotate_translate_pos_dict(pos_dict, opm_trans_path, name, subject_dir="",
             pos_dict[key][2] = pos_dict[key][2] - translation[2]
 
             surf = mne.read_surface(
-                subject_dir + name[0:4] + "/surf/" + "lh.white",
+                subject_dir + geom_name + "/surf/" + "lh.white",
                 read_metadata=True)
             pos_dict[key][0:3] = pos_dict[key][0:3] - surf[2]['cras'] / 1000.0
 
