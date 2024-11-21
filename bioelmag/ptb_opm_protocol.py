@@ -262,7 +262,7 @@ def create_mne_raw(sens_info, meas_info, data_path, channel_factor=(10 ** -9),
         if len(move_fn) > 0:
             pos_dict = move_pos_dict(pos_dict, move_fn)
         pos_dict = rotate_translate_pos_dict(
-            pos_dict, opm_trans_path, name=geom_name, subject_dir=subject_dir,
+            pos_dict, opm_trans_path, geom_name=geom_name, subject_dir=subject_dir,
             gen12=meas_info["gen12"])
 
     info = mne.create_info(ch_names=sens_info["sens_names"], sfreq=sfreq,
@@ -466,10 +466,10 @@ def rotate_translate_pos_dict(pos_dict, opm_trans_path, geom_name, subject_dir="
             pos_dict[key][1] = pos_dict[key][1] - translation[1]
             pos_dict[key][2] = pos_dict[key][2] - translation[2]
 
-            surf = mne.read_surface(
-                subject_dir + geom_name + "/surf/" + "lh.white",
-                read_metadata=True)
-            pos_dict[key][0:3] = pos_dict[key][0:3] - surf[2]['cras'] / 1000.0
+            # surf = mne.read_surface(
+            #     subject_dir + geom_name + "/surf/" + "lh.white",
+            #     read_metadata=True)
+            # pos_dict[key][0:3] = pos_dict[key][0:3] - surf[2]['cras'] / 1000.0
 
     return pos_dict
 
