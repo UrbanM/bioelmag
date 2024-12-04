@@ -23,7 +23,7 @@ def read_sens_info(sens_pos_fn, num_sens=None):
     file_sens_dataarr_pos = sens_pos[:, 3]
     file_sens_type = sens_pos[:, 4]
 
-    directions = ["z", "y", "x"]
+    directions = ["Z", "Y", "X"]
     sens_names = []
     sens_datapos = []
     sens_holdpos = []
@@ -34,8 +34,9 @@ def read_sens_info(sens_pos_fn, num_sens=None):
                 sens_type.append("mag")
                 sens_datapos.append(int(l))
                 sens_names.append(
-                    file_sens_type[i] + file_sens_id[i] + directions[k])
-                sens_holdpos.append(file_sens_hold_idx[i] + directions[k])
+                    directions[k] + file_sens_id[i])
+                sens_holdpos.append(
+                    file_sens_hold_idx[i] + directions[k].lower())
         else:
             sens_type.append(file_sens_type[i])
             sens_datapos.append(int(file_sens_dataarr_pos[i]))
@@ -221,13 +222,13 @@ def read_meas_info(meas_info_fn, block_name):
     meas_info = {
                  "meas_state": int(measurements[meas_idx, 0]),
                  "gain": float(measurements[meas_idx, 4]),
-                 # 'sens_num': int(measurements[meas_idx, 7]),
+                 "additional_trig": measurements[meas_idx, 7],
                  "geom_name": measurements[meas_idx, 12],
                  "protocol": measurements[meas_idx, 13],
                  "gen12": int(measurements[meas_idx, 3]),
                  "importgeometry": int(measurements[meas_idx, 5]),
                  "t_delay": float(measurements[meas_idx, 6]),
-                 # "trigger_ch": int(measurements[meas_idx, 10]),
+                 "trigger_ch": measurements[meas_idx, 10],
                  "dataformat": measurements[meas_idx, 9],
                  "bads_idx": bads_idx,
                  "block_name": measurements[meas_idx, 1],
@@ -257,38 +258,38 @@ def create_mne_raw(sens_info, meas_info, data_path, channel_factor=(10 ** -9),
         value_name = data_path[1]
         data, sfreq = import_flt_hdr(header_name, value_name)
 
-    if meas_info["importgeometry"] == 1:
-        pos_dict = create_sens_pos_dict(sens_hol_path, "all")
-        if len(move_fn) > 0:
-            pos_dict = move_pos_dict(pos_dict, move_fn)
-        pos_dict = rotate_translate_pos_dict(
-            pos_dict, opm_trans_path, geom_name=geom_name, subject_dir=subject_dir,
-            gen12=meas_info["gen12"])
+    # if meas_info["importgeometry"] == 1:
+    #     pos_dict = create_sens_pos_dict(sens_hol_path, "all")
+    #     if len(move_fn) > 0:
+    #         pos_dict = move_pos_dict(pos_dict, move_fn)
+    #     pos_dict = rotate_translate_pos_dict(
+    #         pos_dict, opm_trans_path, geom_name=geom_name, subject_dir=subject_dir,
+    #         gen12=meas_info["gen12"])
 
     info = mne.create_info(ch_names=sens_info["sens_names"], sfreq=sfreq,
                            ch_types=sens_info["sens_type"])
 
-    unit_v = np.array([0.0, 0.0, 1.0])
+    # unit_v = np.array([0.0, 0.0, 1.0])
     for i, j in enumerate(info.ch_names):
-        if "oMEG" in j:
-            info['chs'][i]['coil_type'] = 9999
+        if "X" in j or "Y" in j or "Z" in j:
+            info['chs'][i]['coil_type'] = 8002
             info['chs'][i]['scanno'] = i + 1
             info['chs'][i]['logno'] = i + 1
             info['chs'][i]['kind'] = 1
             info['chs'][i]['range'] = 1.0
-            info['chs'][i]['cal'] = 3.7000000285836165e-10
+            info['chs'][i]['cal'] = 1.0
             info['chs'][i]['unit'] = 112
             sens_hold_idx = sens_info['sens_names'].index(j)
-            if meas_info["importgeometry"] == 1:
-                sens_hold_name = sens_info['sens_holdpos'][
-                    sens_hold_idx]
-                holders = pos_dict[sens_hold_name]
-                rot_mat = vfun.create_rot_matrix(holders[3:6], unit_v)
-                info['chs'][i]['loc'] = np.array(
-                    [holders[0], holders[1], holders[2], rot_mat[0, 0],
-                     rot_mat[0, 1], rot_mat[0, 2], rot_mat[1, 0],
-                     rot_mat[1, 1], rot_mat[1, 2], rot_mat[2, 0],
-                     rot_mat[2, 1], rot_mat[2, 2]])
+            # if meas_info["importgeometry"] == 1:
+            #     sens_hold_name = sens_info['sens_holdpos'][
+            #         sens_hold_idx]
+            #     holders = pos_dict[sens_hold_name]
+            #     rot_mat = vfun.create_rot_matrix(holders[3:6], unit_v)
+            #     info['chs'][i]['loc'] = np.array(
+            #         [holders[0], holders[1], holders[2], rot_mat[0, 0],
+            #          rot_mat[0, 1], rot_mat[0, 2], rot_mat[1, 0],
+            #          rot_mat[1, 1], rot_mat[1, 2], rot_mat[2, 0],
+            #          rot_mat[2, 1], rot_mat[2, 2]])
             data[sens_info['sens_datapos'][sens_hold_idx]] = data[
                 sens_info['sens_datapos'][sens_hold_idx]] * channel_factor
 
