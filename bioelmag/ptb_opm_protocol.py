@@ -354,6 +354,11 @@ def move_pos_dict(pos_dict, move_fn):
                         rota = vfun.rotation_matrix(pos_dict[rt_vec_name][3:6],
                                                     float(line_list[3]))
                         pos_dict[i][3:6] = np.dot(rota, pos_dict[i][3:6])
+                if line_list[0] == "reor":
+                    for i in affect_list:
+                        pos_dict[i][3:6] = - pos_dict[i][3:6]
+
+
     except IOError:
         print("No SensorManipulation.txt file")
 
